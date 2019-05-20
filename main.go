@@ -15,7 +15,7 @@ import (
 // JPG |640 * 480|
 
 const (
-	imageFilepath    = "images/example.jpg"
+	imageFilepath    = "images/example1.jpg"
 	rawImageFilepath = "images/example.jpg.base64"
 	finalImage       = "images/final.jpg"
 )
@@ -104,7 +104,7 @@ func enableHttp() {
 				log.Fatalf("can't decode raw image: %v\n", err)
 			}
 
-			file, err := os.OpenFile(finalImage, os.O_WRONLY|os.O_CREATE, 0600)
+			file, err := os.OpenFile(finalImage, os.O_WRONLY|os.O_CREATE, 0666)
 			if err != nil {
 				log.Fatalf("can't open file: %v\n", err)
 			}
@@ -127,12 +127,12 @@ func enableHttp() {
 	}
 }
 
-func enableHttpClient() {
+func enableHttpClient(path string) {
 	//url := "http://localhost:8080/api/v1/image"
 	url := "http://" + *httpAddress + "/api/v1/image"
 	contentType := "image/jpeg"
 
-	rawImage, err := ioutil.ReadFile(imageFilepath)
+	rawImage, err := ioutil.ReadFile("images/example2.jpg")
 	if err != nil {
 		log.Fatalf("can't get raw image: %v\n", err)
 	}
@@ -148,12 +148,19 @@ func enableHttpClient() {
 	_ = resp
 }
 
+func bot() {
+	for i := 0; i < 1000; i++ {
+		enableHttpClient(fmt.Sprintf("images/example%v.jpg", i))
+	}
+}
+
 func main() {
 	encode := flag.Bool("encode", false, "")
 	decode := flag.Bool("decode", false, "")
 	enableHttpFlag := flag.Bool("http", false, "")
 	enableHttpClientFlag := flag.Bool("http-client", false, "")
 	httpAddress = flag.String("http-address", "0.0.0.0:8080", "")
+	botFlag := flag.Bool("bot", false, "")
 
 	flag.Parse()
 
@@ -170,6 +177,10 @@ func main() {
 	}
 
 	if *enableHttpClientFlag {
-		enableHttpClient()
+		enableHttpClient(imageFilepath)
+	}
+
+	if *botFlag {
+		bot()
 	}
 }
