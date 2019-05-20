@@ -20,6 +20,8 @@ const (
 	finalImage       = "images/final.jpg"
 )
 
+var httpAddress *string
+
 func decodeImage() {
 	rawImage, err := ioutil.ReadFile(imageFilepath)
 	if err != nil {
@@ -120,7 +122,7 @@ func enableHttp() {
 	fs := http.FileServer(http.Dir("images/"))
 	http.Handle("/images/", http.StripPrefix("/images/", fs))
 
-	if err := http.ListenAndServe(":8080", nil); err != nil {
+	if err := http.ListenAndServe(*httpAddress, nil); err != nil {
 		log.Fatalf("failed to serve: %v\n", err)
 	}
 }
@@ -150,6 +152,7 @@ func main() {
 	decode := flag.Bool("decode", false, "")
 	enableHttpFlag := flag.Bool("http", false, "")
 	enableHttpClientFlag := flag.Bool("http-client", false, "")
+	httpAddress = flag.String("http-address", "0.0.0.0:8080", "")
 
 	flag.Parse()
 
