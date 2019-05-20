@@ -128,7 +128,8 @@ func enableHttp() {
 }
 
 func enableHttpClient() {
-	url := "http://localhost:8080/api/v1/image"
+	//url := "http://localhost:8080/api/v1/image"
+	url := "http://" + *httpAddress + "/api/v1/image"
 	contentType := "image/jpeg"
 
 	rawImage, err := ioutil.ReadFile(imageFilepath)
