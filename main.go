@@ -4,9 +4,11 @@ import (
 	"bytes"
 	"encoding/base64"
 	"flag"
+	"fmt"
 	"image/jpeg"
 	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
 )
 
@@ -69,9 +71,82 @@ func encodeImage() {
 	}
 }
 
+func enableHttp() {
+	http.HandleFunc("/", func (w http.ResponseWriter, r *http.Request) {
+		if _, err := fmt.Fprintf(w, "Welcome to my website!"); err != nil {
+			log.Println(err)
+			return
+		}
+	})
+	fmt.Printf("Start HTTP Server\n")
+
+	http.HandleFunc("/api/v1/image", func (w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case "POST":
+			rawImageBase64, err := ioutil.ReadAll(r.Body)
+			if err != nil {
+				log.Println(err)
+				return
+			}
+
+			rawImage, err := base64.StdEncoding.DecodeString(string(rawImageBase64))
+			if err != nil {
+				log.Fatal(err)
+				return
+			}
+			rawImageReader := bytes.NewReader(rawImage)
+
+			image, err := jpeg.Decode(rawImageReader)
+			if err != nil {
+				log.Fatalf("can't decode raw image: %v\n", err)
+			}
+
+			file, err := os.OpenFile(finalImage, os.O_WRONLY|os.O_CREATE, 0600)
+			if err != nil {
+				log.Fatalf("can't open file: %v\n", err)
+			}
+			err = jpeg.Encode(
+				file,
+				image,
+				&jpeg.Options{Quality: jpeg.DefaultQuality},
+			)
+			if err != nil {
+				log.Fatal(err)
+			}
+		}
+	})
+
+	if err := http.ListenAndServe(":8080", nil); err != nil {
+		log.Fatalf("failed to serve: %v\n", err)
+	}
+}
+
+func enableHttpClient() {
+	url := "http://localhost:8080/api/v1/image"
+	contentType := "image/jpeg"
+
+	rawImage, err := ioutil.ReadFile(imageFilepath)
+	if err != nil {
+		log.Fatalf("can't get raw image: %v\n", err)
+	}
+
+	rawImageBase64 := base64.StdEncoding.EncodeToString(rawImage)
+	rawImageBase64Reader := bytes.NewReader([]byte(rawImageBase64))
+
+	resp, err := http.Post(url, contentType, rawImageBase64Reader)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	_ = resp
+}
+
 func main() {
 	encode := flag.Bool("encode", false, "")
 	decode := flag.Bool("decode", false, "")
+	enableHttpFlag := flag.Bool("http", false, "")
+	enableHttpClientFlag := flag.Bool("http-client", false, "")
+
 	flag.Parse()
 
 	if *encode {
@@ -80,5 +155,13 @@ func main() {
 
 	if *decode {
 		decodeImage()
+	}
+
+	if *enableHttpFlag {
+		enableHttp()
+	}
+
+	if *enableHttpClientFlag {
+		enableHttpClient()
 	}
 }
