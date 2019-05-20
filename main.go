@@ -117,6 +117,9 @@ func enableHttp() {
 		}
 	})
 
+	fs := http.FileServer(http.Dir("images/"))
+	http.Handle("/images/", http.StripPrefix("/images/", fs))
+
 	if err := http.ListenAndServe(":8080", nil); err != nil {
 		log.Fatalf("failed to serve: %v\n", err)
 	}
