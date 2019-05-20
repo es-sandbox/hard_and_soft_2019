@@ -15,9 +15,9 @@ import (
 // JPG |640 * 480|
 
 const (
-	imageFilepath    = "example.jpg"
-	rawImageFilepath = "example.jpg.base64"
-	finalImage       = "final.jpg"
+	imageFilepath    = "images/example.jpg"
+	rawImageFilepath = "images/example.jpg.base64"
+	finalImage       = "images/final.jpg"
 )
 
 func decodeImage() {
@@ -72,13 +72,14 @@ func encodeImage() {
 }
 
 func enableHttp() {
+	fmt.Printf("Start HTTP Server\n")
+
 	http.HandleFunc("/", func (w http.ResponseWriter, r *http.Request) {
 		if _, err := fmt.Fprintf(w, "Welcome to my website!"); err != nil {
 			log.Println(err)
 			return
 		}
 	})
-	fmt.Printf("Start HTTP Server\n")
 
 	http.HandleFunc("/api/v1/image", func (w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
